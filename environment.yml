@@ -1,0 +1,19 @@
+name: tdt-sg
+channels:
+  - rdkit
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - rdkit
+  - jupyter
+  - matplotlib
+  - pillow
+  - cairo
+  - cairosvg
+  # diffing notebooks
+  - nbdime

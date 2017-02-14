@@ -1,7 +1,11 @@
 # global variables and
 # common functions used for training of ML models
-
-import numpy, cPickle
+from __future__ import print_function
+import numpy
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from rdkit import Chem, DataStructs
 from rdkit.Chem import rdMolDescriptors as rdmd
 
@@ -13,10 +17,15 @@ num_rep = 50
 num_percent = 0.1
 
 # fingerprint dictionary
-fp_dict = {}
-fp_dict['morgan2'] = lambda m: rdmd.GetMorganFingerprintAsBitVect(m, 2, nBits=1024)
-fp_dict['ap'] = lambda m: rdmd.GetHashedAtomPairFingerprintAsBitVect(m, nBits=2048)
-fp_dict['rdk5'] = lambda m: Chem.RDKFingerprint(m, maxPath=5, fpSize=2048, nBitsPerHash=2)
+fp_dict = {
+    'morgan2': lambda m: rdmd.GetMorganFingerprintAsBitVect(m, 2, nBits=1024),
+    'ap': lambda m: rdmd.GetHashedAtomPairFingerprintAsBitVect(m, nBits=2048),
+    'rdk5': lambda m: Chem.RDKFingerprint(m, maxPath=5, fpSize=2048, nBitsPerHash=2),
+    'morgan2-4096': lambda m: rdmd.GetMorganFingerprintAsBitVect(m, 2, nBits=4096),
+    'ap-4096': lambda m: rdmd.GetHashedAtomPairFingerprintAsBitVect(m, nBits=4096),
+    'rdk5-4096': lambda m: Chem.RDKFingerprint(m, maxPath=5, fpSize=4096, nBitsPerHash=2),
+}
+
 
 def getNumpyFP(smiles, fpname, fptype):
     m = Chem.MolFromSmiles(smiles)
@@ -35,6 +44,7 @@ def getNumpyFP(smiles, fpname, fptype):
     else:
         return None
 
+
 def getFP(smiles, fpname):
     m = Chem.MolFromSmiles(smiles)
     if m is not None:
@@ -43,6 +53,7 @@ def getFP(smiles, fpname):
         return fp
     else:
         return None
+
 
 def writeActiveRanks(scores, outfile, num_act):
     # scores contains: [proba, simil, info]
@@ -57,7 +68,8 @@ def writeActiveRanks(scores, outfile, num_act):
     # keep only the actives
     indices = [r for idx,r in indices[:num_act]]
     # write to file
-    cPickle.dump(indices, outfile, 2)
+    pickle.dump(indices, outfile, 2)
+
 
 def assignRanksWithInfo(plist): # contains [proba, simil, info]
     num = len(plist)
@@ -70,6 +82,7 @@ def assignRanksWithInfo(plist): # contains [proba, simil, info]
     # remove the index
     return [(rank, p, s, info) for j,rank,p,s,info in tmplist]
 
+
 def assignRanks(plist, slist): # input: list of probabilities and list of similarities
     num = len(plist)
     # combine the lists and add the index
@@ -81,5 +94,3 @@ def assignRanks(plist, slist): # input: list of probabilities and list of simila
     tmplist.sort() # sort by ascending index to return to original order
     # remove the index
     return [(rank, p, s) for j,rank,p,s in tmplist]
-
-

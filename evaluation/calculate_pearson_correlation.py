@@ -1,9 +1,17 @@
 # read the ranks of the actives from different models
 # and calculates the Pearson correlation coefficient
+from __future__ import print_function
 
-import os, gzip, numpy, cPickle, sys
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+import gzip
+import numpy
+import os
+import sys
 from collections import defaultdict
-from rdkit import Chem, DataStructs
+
 from scipy.stats import pearsonr
 
 # common functions
@@ -13,7 +21,7 @@ import common_functions as cf
 path = os.getcwd() + '/'
 inpath = path + '../data/'
 
-#methods = ['lr', 'rf', 'nb']
+# methods = ['lr', 'rf', 'nb']
 methods = ['rf', 'lr']
 fpnames = ['ap', 'rdk5', 'morgan2']
 
@@ -23,13 +31,13 @@ names = []
 for m in methods:
     for fp in fpnames:
         name = m+'_'+fp
-        print name
+        print(name)
         names.append(name)
-        infile = gzip.open(path+'scores/ranks_actives_'+name+'.pkl.gz', 'r')
+        infile = gzip.open(path+'scores/ranks_actives_'+name+'.pkl.gz', 'rb')
         for i in range(cf.num_rep):
-            ranks[name].append(cPickle.load(infile))
+            ranks[name].append(pickle.load(infile))
         infile.close()
-print "number of models =", len(ranks)
+print("number of models =", len(ranks))
 
 # loop over the models
 num_names = len(names)
@@ -41,13 +49,13 @@ for i in range(num_names):
         n2 = names[j]
         pearson = []
         for r in range(cf.num_rep):
-            tmp = pearsonr(ranks[n1][r], ranks[n2][r]) # [pearson, p-value]
-            pearson.append(tmp[0]) # keep only pearson coefficient
+            tmp = pearsonr(ranks[n1][r], ranks[n2][r])  # [pearson, p-value]
+            pearson.append(tmp[0])  # keep only pearson coefficient
         ave_pearson[n1+'-'+n2] = [numpy.average(pearson), numpy.std(pearson)]
         names2.append(n1+'-'+n2)
 
 # write out
-outfile = open(path+'analysis/pearson_correlation.dat', 'w')
+outfile = open(path+'analysis/pearson_correlation.dat', 'wt')
 outfile.write("#Model1-Model2\tAve_Pearson\tSTD\n")
 outfile.writelines("%s\t%.3f\t%.3f\n" % (k, ave_pearson[k][0], ave_pearson[k][1]) for k in names2)
 outfile.close()
